@@ -207,14 +207,15 @@ def format_data(data):
 
 if __name__ == '__main__':
     
+    import math
     
     training_data = pd.read_csv('../data/train.csv')
     test_data = pd.read_csv('../data/test.csv')
     
     #print(training_data.head())
     
-    train_ar = np.array(training_data.iloc[:40000])
-    valid_ar = np.array(training_data.iloc[40000:])
+    train_ar = np.array(training_data.iloc[:1000])
+    valid_ar = np.array(training_data.iloc[1000:2000])
     test_ar  = np.array(test_data)
 
     train_list = format_data (train_ar)
@@ -231,7 +232,23 @@ if __name__ == '__main__':
     testing_in = [image[0] for image in valid_list]
     testing_out = [image[1] for image in valid_list]
     
-    print (input_svm[0])
+    for i in range(0,784):
+        num = input_svm[1][i]
+        print (num, end='')
+        digits = 1
+        if num != 0:
+            digits = int(math.log10(num))+1
+        if digits == 1:
+            print ("    ", end='')
+        elif digits == 2:
+            print ("   ", end='')
+        elif digits == 3:
+            print ("  ", end='')
+        if i % 28 == 0 and i != 0:
+            print ('\n')
+    
+    sys.exit()
+    
     print (output_svm[0])
 
     print (len(input_svm))
@@ -241,7 +258,12 @@ if __name__ == '__main__':
 
     baseline.fit (input_svm, output_svm)
     
+    print ("Fit complete")
+    
     predictions = [int(a) for a in baseline.predict(testing_in)]
+    
+    print ("Predictions complete")
+    
     correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
     
     print ("Baseline SVM fit.")
