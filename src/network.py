@@ -16,7 +16,6 @@ import gc
 import numpy as np
 import pandas as pd
 from sklearn.utils import shuffle
-from bigfloat import exp
 
 
 
@@ -54,7 +53,6 @@ class Network(object):
 
     def feedforward(self, a):
         """Return the output of the network if ``a`` is input."""
-        a = a.reshape(len(a), 1)
         for b, w in zip(self.biases, self.weights):
             a = sigmoid(np.dot(w, a)+b)
         return a
@@ -69,26 +67,28 @@ class Network(object):
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
+        n = len(train_data)
         tr_d = self.format_data(train_data)
-      
+        tr_d = list(tr_d)
+        
         if test_data.any():
             n_test = len(test_data)
             te_d = self.format_data(test_data)
+            te_d = list (te_d)
+            print ('Formating test data')
             
-        n = len(tr_d)
         for j in range(epochs):
-            print ("Epoch {}".format(j))
-            shuffle(tr_d)
+            random.shuffle(tr_d)
             mini_batches = [
                 tr_d[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
             if test_data.any():
-                print("Epoch {0}: {1} / {2}".format(
+                print("Epoch {}: {} / {}".format(
                     j, self.evaluate(te_d), n_test))
             else:
-                print("Epoch {0} complete".format(j))
+                print("Epoch {} complete".format(j))
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -124,7 +124,6 @@ class Network(object):
             activations.append(activation)
         # backward pass
         delta = self.cost_derivative(activations[-1], image[0]) * sigmoid_prime(zs[-1])
-#        sys.exit()
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -148,7 +147,13 @@ class Network(object):
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(image)), value)
                         for image, value in test_data]
-        return sum(int(x == y) for (x, y) in test_results)
+        print (test_results[0])
+        print (test_results[0][0])
+        for x, y in test_results:
+            print (int(x==y))
+            sys.exit()
+        sys.exit()
+        return sum(int(x == y) for x, y in test_results)
 
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
@@ -161,10 +166,7 @@ class Network(object):
         """Stuff goes here"""
         inputs = [np.reshape(x, (784, 1)) for x in data[:,1:]]
         outputs = [y for y in data[:,0]] 
-        print (outputs.shape)
-        print (outputs[1])
         formatted_data = zip(inputs, outputs)
-        formatted_data = list(formatted_data)
         return formatted_data
 
 #### Miscellaneous functions
@@ -180,6 +182,8 @@ def sigmoid(z):
             sig[a] = (1.0/(1.0 + np.exp(-z[a])))
     sig = sig.reshape(len(sig), 1)
     return sig
+#     return (1.0/(1.0 + np.exp(-z)))
+
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
@@ -194,13 +198,9 @@ if __name__ == '__main__':
     
     #print(training_data.head())
     
-    
-    
     train_ar = np.array(training_data.iloc[:40000])
     valid_ar = np.array(training_data.iloc[40000:])
     test_ar  = np.array(test_data)
-
-
     
     gc.collect()
     
