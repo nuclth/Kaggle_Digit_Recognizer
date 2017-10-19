@@ -249,7 +249,7 @@ if __name__ == '__main__':
     training_data, validation_data, test_data = load_data_wrapper()
     training_data = list(training_data)
     
-    print (training_data[0])
+    print (len(training_data[0]))
     sys.exit()
     gc.collect()
     

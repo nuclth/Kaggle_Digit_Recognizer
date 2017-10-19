@@ -16,9 +16,7 @@ import gc
 import numpy as np
 import pandas as pd
 from sklearn.utils import shuffle
-
-
-
+from sklearn import svm
 
 """
 network.py
@@ -123,7 +121,7 @@ class Network(object):
             activation = sigmoid(z)
             activations.append(activation)
         # backward pass
-        delta = self.cost_derivative(activations[-1], image[0]) * sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], value) * sigmoid_prime(zs[-1])
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
         # Note that the variable l in the loop below is used a little
@@ -147,12 +145,6 @@ class Network(object):
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(image)), value)
                         for image, value in test_data]
-        print (test_results[0])
-        print (test_results[0][0])
-        for x, y in test_results:
-            print (int(x==y))
-            sys.exit()
-        sys.exit()
         return sum(int(x == y) for x, y in test_results)
 
     def cost_derivative(self, output_activations, y):
@@ -172,22 +164,45 @@ class Network(object):
 #### Miscellaneous functions
 def sigmoid(z):
     """The sigmoid function."""
-    sig = np.zeros(len(z))
-    for a in range(0, len(z)):
-        if z[a] > 700.:
-            sig[a] = 1.
-        elif z[a] < -700.:
-            sig[a] = 0.
-        else:
-            sig[a] = (1.0/(1.0 + np.exp(-z[a])))
-    sig = sig.reshape(len(sig), 1)
-    return sig
+    return (1.0/(1.0 + np.exp(-z)))
+#    sig = np.zeros(len(z))
+#    for a in range(0, len(z)):
+#        if z[a] > 700.:
+#            sig[a] = 1.
+#        elif z[a] < -700.:
+#            sig[a] = 0.
+#        else:
+#            sig[a] = (1.0/(1.0 + np.exp(-z[a])))
+#    sig = sig.reshape(len(sig), 1)
+#    return sig
 #     return (1.0/(1.0 + np.exp(-z)))
 
 
 def sigmoid_prime(z):
     """Derivative of the sigmoid function."""
     return sigmoid(z)*(1-sigmoid(z))
+
+
+
+def svm_baseline():
+    pass
+#    training_data, validation_data, test_data = mnist_loader.load_data()
+    # train
+#    clf = svm.SVC()
+#    clf.fit(training_data[0], training_data[1])
+    # test
+#    predictions = [int(a) for a in clf.predict(test_data[0])]
+#    num_correct = sum(int(a == y) for a, y in zip(predictions, test_data[1]))
+#    print "Baseline classifier using an SVM."
+#    print "%s of %s values correct." % (num_correct, len(test_data[1]))
+
+def format_data(data):
+    """Stuff goes here"""
+    inputs = [x for x in data[:,1:]]
+    outputs = [y for y in data[:,0]] 
+    formatted_data = zip(inputs, outputs)
+    return formatted_data
+
 
 
 if __name__ == '__main__':
@@ -201,9 +216,38 @@ if __name__ == '__main__':
     train_ar = np.array(training_data.iloc[:40000])
     valid_ar = np.array(training_data.iloc[40000:])
     test_ar  = np.array(test_data)
+
+    train_list = format_data (train_ar)
+    valid_list = format_data (valid_ar)
     
-    gc.collect()
+    train_list = list (train_list)
+    valid_list = list (valid_list)
     
+    baseline = svm.SVC()
+    
+    input_svm = [image[0] for image in train_list]
+    output_svm = [image[1] for image in train_list] 
+
+    testing_in = [image[0] for image in valid_list]
+    testing_out = [image[1] for image in valid_list]
+    
+    print (input_svm[0])
+    print (output_svm[0])
+
+    print (len(input_svm))
+    print (len(output_svm))
+
+    print ("Performing SVM Fit")
+
+    baseline.fit (input_svm, output_svm)
+    
+    predictions = [int(a) for a in baseline.predict(testing_in)]
+    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
+    
+    print ("Baseline SVM fit.")
+    print ("{} of {} values correct".format(correct, len(testing_out)))
+    
+    sys.exit()
     net = Network([784, 30, 10])
     net.SGD(train_ar, 30, 10, 3.0, test_data = valid_ar)
     #print (train_ar.shape)
