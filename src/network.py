@@ -66,25 +66,29 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         n = len(train_data)
-        tr_d = self.format_data(train_data)
-        tr_d = list(tr_d)
+#        tr_d = self.format_data(train_data)
+#        tr_d = list(tr_d)
         
-        if test_data.any():
+#        print (train_data[0][0])
+#        print (train_data[0][1])
+#        sys.exit()
+        
+        if test_data:
             n_test = len(test_data)
-            te_d = self.format_data(test_data)
-            te_d = list (te_d)
+#            te_d = self.format_data(test_data)
+#            te_d = list (te_d)
             print ('Formating test data')
             
         for j in range(epochs):
-            random.shuffle(tr_d)
+            random.shuffle(train_data)
             mini_batches = [
-                tr_d[k:k+mini_batch_size]
+                train_data[k:k+mini_batch_size]
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
-            if test_data.any():
+            if test_data:
                 print("Epoch {}: {} / {}".format(
-                    j, self.evaluate(te_d), n_test))
+                    j, self.evaluate(test_data), n_test))
             else:
                 print("Epoch {} complete".format(j))
 
@@ -113,29 +117,65 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
         activation = image
+        activation = activation.reshape(len(activation), 1)
+#        print (image)
         activations = [activation] # list to store all the activations, layer by layer
+#        print (activation.shape)
         zs = [] # list to store all the z vectors, layer by layer
+#        print ("BEGIN B,W LOOP")
         for b, w in zip(self.biases, self.weights):
+#            print (activation.shape)
             z = np.dot(w, activation) + b
+#            z = z.reshape (len(z), 1) + b
+#            print (z.shape)
             zs.append(z)
             activation = sigmoid(z)
+#            print (activation.shape)
+#            print (activations[0])
             activations.append(activation)
+#        print (activations)
+#        print ("END B, W LOOP")
+#        sys.exit()
+#        sys.exit()
         # backward pass
+#        print (activations[-1].shape)
+#        print (value.shape)
+#        print (activations[-1])
+#        print (value)
         delta = self.cost_derivative(activations[-1], value) * sigmoid_prime(zs[-1])
+#        print (delta.shape)
+#        print (delta)
+#        print (delta[0])
+#        print (delta[0][0])
+#        sys.exit()
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
+#        print (nabla_w[-1].shape)
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
         # l = 1 means the last layer of neurons, l = 2 is the
         # second-last layer, and so on.  It's a renumbering of the
         # scheme in the book, used here to take advantage of the fact
         # that Python can use negative indices in lists.
+#        print ("BEGIN L LOOP")
         for l in range(2, self.num_layers):
+#            print (l)
             z = zs[-l]
             sp = sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
+#            print (delta.shape)
             nabla_b[-l] = delta
-            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+            inter = np.array(activations[-l-1])
+            inter = inter.reshape(len(activations[-l-1]), 1)
+            inter = inter.transpose()
+            nabla_w[-l] = np.dot(delta,inter)
+#            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+#        print ("END L loop")
+#        print (nabla_b[0].shape)
+#        print (nabla_w[0].shape)
+#        print (nabla_b[1].shape)
+#        print (nabla_w[1].shape)
+#        sys.exit()
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
@@ -150,7 +190,8 @@ class Network(object):
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
-        cost = np.copy(output_activations)
+#        print (output_activations)
+        cost = np.array(output_activations)
         cost[y] = cost[y] - 1.0
         return cost
     
@@ -207,15 +248,15 @@ def format_data(data):
 
 if __name__ == '__main__':
     
-    import math
+#    import math
     
     training_data = pd.read_csv('../data/train.csv')
     test_data = pd.read_csv('../data/test.csv')
     
     #print(training_data.head())
     
-    train_ar = np.array(training_data.iloc[:1000])
-    valid_ar = np.array(training_data.iloc[1000:2000])
+    train_ar = np.array(training_data.iloc[:10000])
+    valid_ar = np.array(training_data.iloc[10000:20000])
     test_ar  = np.array(test_data)
 
     train_list = format_data (train_ar)
@@ -224,54 +265,60 @@ if __name__ == '__main__':
     train_list = list (train_list)
     valid_list = list (valid_list)
     
-    baseline = svm.SVC()
+#    baseline = svm.SVC()
     
-    input_svm = [image[0] for image in train_list]
-    output_svm = [image[1] for image in train_list] 
+#    input_svm = [image[0] for image in train_list]
+#    output_svm = [image[1] for image in train_list] 
 
     testing_in = [image[0] for image in valid_list]
     testing_out = [image[1] for image in valid_list]
-    
-    for i in range(0,784):
-        num = input_svm[1][i]
-        print (num, end='')
-        digits = 1
-        if num != 0:
-            digits = int(math.log10(num))+1
-        if digits == 1:
-            print ("    ", end='')
-        elif digits == 2:
-            print ("   ", end='')
-        elif digits == 3:
-            print ("  ", end='')
-        if i % 28 == 0 and i != 0:
-            print ('\n')
-    
-    sys.exit()
-    
-    print (output_svm[0])
 
-    print (len(input_svm))
-    print (len(output_svm))
+    print (train_list[0][0])
+    print (train_list[0][1])
+    print (len(train_list))
+      
 
-    print ("Performing SVM Fit")
+    
+#    for i in range(0,784):
+#        num = input_svm[1][i]
+#        print (num, end='')
+#        digits = 1
+#        if num != 0:
+#            digits = int(math.log10(num))+1
+#        if digits == 1:
+#            print ("    ", end='')
+#        elif digits == 2:
+#            print ("   ", end='')
+#        elif digits == 3:
+#            print ("  ", end='')
+#        if i % 28 == 0 and i != 0:
+#            print ('\n')
+    
+#    sys.exit()
+    
+#    print (output_svm[0])
 
-    baseline.fit (input_svm, output_svm)
+#    print (len(input_svm))
+#    print (len(output_svm))
+
+#    print ("Performing SVM Fit")
+
+#    baseline.fit (input_svm, output_svm)
     
-    print ("Fit complete")
+#    print ("Fit complete")
     
-    predictions = [int(a) for a in baseline.predict(testing_in)]
+#    predictions = [int(a) for a in baseline.predict(testing_in)]
     
-    print ("Predictions complete")
+#    print ("Predictions complete")
     
-    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
+#    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
     
-    print ("Baseline SVM fit.")
-    print ("{} of {} values correct".format(correct, len(testing_out)))
+#    print ("Baseline SVM fit.")
+#    print ("{} of {} values correct".format(correct, len(testing_out)))
     
-    sys.exit()
+#    sys.exit()
     net = Network([784, 30, 10])
-    net.SGD(train_ar, 30, 10, 3.0, test_data = valid_ar)
+    net.SGD(train_list, 30, 10, 3.0, test_data = valid_list)
     #print (train_ar.shape)
     #print (valid_ar.shape)
     #print (test_ar.shape)
