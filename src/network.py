@@ -73,11 +73,7 @@ class Network(object):
 #        print (train_data[0][1])
 #        sys.exit()
         
-        if test_data:
-            n_test = len(test_data)
-#            te_d = self.format_data(test_data)
-#            te_d = list (te_d)
-            print ('Formating test data')
+        if test_data: n_test = len(test_data)
             
         for j in range(epochs):
             random.shuffle(train_data)
@@ -99,7 +95,8 @@ class Network(object):
         is the learning rate."""
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
-        for image, value in mini_batch:
+        loop = 0
+        for value, image in mini_batch:
             delta_nabla_b, delta_nabla_w = self.backprop(image, value)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
             nabla_w = [nw+dnw for nw, dnw in zip(nabla_w, delta_nabla_w)]
@@ -117,33 +114,19 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
         activation = image
-        activation = activation.reshape(len(activation), 1)
 #        print (image)
         activations = [activation] # list to store all the activations, layer by layer
 #        print (activation.shape)
         zs = [] # list to store all the z vectors, layer by layer
-#        print ("BEGIN B,W LOOP")
         for b, w in zip(self.biases, self.weights):
-#            print (activation.shape)
             z = np.dot(w, activation) + b
-#            z = z.reshape (len(z), 1) + b
-#            print (z.shape)
             zs.append(z)
             activation = sigmoid(z)
-#            print (activation.shape)
-#            print (activations[0])
             activations.append(activation)
-#        print (activations)
-#        print ("END B, W LOOP")
-#        sys.exit()
-#        sys.exit()
         # backward pass
-#        print (activations[-1].shape)
-#        print (value.shape)
-#        print (activations[-1])
-#        print (value)
-        delta = self.cost_derivative(activations[-1], value) * sigmoid_prime(zs[-1])
+        delta = self.cost_derivative(activations[-1], value) * sigmoid_prime(zs[-1]) 
 #        print (delta.shape)
+#        sys.exit()
 #        print (delta)
 #        print (delta[0])
 #        print (delta[0][0])
@@ -165,11 +148,7 @@ class Network(object):
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
 #            print (delta.shape)
             nabla_b[-l] = delta
-            inter = np.array(activations[-l-1])
-            inter = inter.reshape(len(activations[-l-1]), 1)
-            inter = inter.transpose()
-            nabla_w[-l] = np.dot(delta,inter)
-#            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
+            nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
 #        print ("END L loop")
 #        print (nabla_b[0].shape)
 #        print (nabla_w[0].shape)
@@ -184,7 +163,7 @@ class Network(object):
         network's output is assumed to be the index of whichever
         neuron in the final layer has the highest activation."""
         test_results = [(np.argmax(self.feedforward(image)), value)
-                        for image, value in test_data]
+                        for value, image in test_data]
         return sum(int(x == y) for x, y in test_results)
 
     def cost_derivative(self, output_activations, y):
@@ -195,12 +174,6 @@ class Network(object):
         cost[y] = cost[y] - 1.0
         return cost
     
-    def format_data(self, data):
-        """Stuff goes here"""
-        inputs = [np.reshape(x, (784, 1)) for x in data[:,1:]]
-        outputs = [y for y in data[:,0]] 
-        formatted_data = zip(inputs, outputs)
-        return formatted_data
 
 #### Miscellaneous functions
 def sigmoid(z):
@@ -239,9 +212,9 @@ def svm_baseline():
 
 def format_data(data):
     """Stuff goes here"""
-    inputs = [x for x in data[:,1:]]
+    inputs = [np.reshape(x, (784,1))/255 for x in data[:,1:]]
     outputs = [y for y in data[:,0]] 
-    formatted_data = zip(inputs, outputs)
+    formatted_data = zip(outputs, inputs)
     return formatted_data
 
 
@@ -253,11 +226,12 @@ if __name__ == '__main__':
     training_data = pd.read_csv('../data/train.csv')
     test_data = pd.read_csv('../data/test.csv')
     
-    #print(training_data.head())
+
     
-    train_ar = np.array(training_data.iloc[:10000])
-    valid_ar = np.array(training_data.iloc[10000:20000])
+    train_ar = np.array(training_data.iloc[:40000])
+    valid_ar = np.array(training_data.iloc[40000:42000])
     test_ar  = np.array(test_data)
+
 
     train_list = format_data (train_ar)
     valid_list = format_data (valid_ar)
@@ -269,16 +243,7 @@ if __name__ == '__main__':
     
 #    input_svm = [image[0] for image in train_list]
 #    output_svm = [image[1] for image in train_list] 
-
-    testing_in = [image[0] for image in valid_list]
-    testing_out = [image[1] for image in valid_list]
-
-    print (train_list[0][0])
-    print (train_list[0][1])
-    print (len(train_list))
-      
-
-    
+          
 #    for i in range(0,784):
 #        num = input_svm[1][i]
 #        print (num, end='')
@@ -318,7 +283,7 @@ if __name__ == '__main__':
     
 #    sys.exit()
     net = Network([784, 30, 10])
-    net.SGD(train_list, 30, 10, 3.0, test_data = valid_list)
+    net.SGD(train_list, 30, 100, 1.0, test_data = valid_list)
     #print (train_ar.shape)
     #print (valid_ar.shape)
     #print (test_ar.shape)
