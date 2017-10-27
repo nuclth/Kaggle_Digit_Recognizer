@@ -211,7 +211,13 @@ def svm_baseline():
 #    print "%s of %s values correct." % (num_correct, len(test_data[1]))
 
 def format_data(data):
-    """Stuff goes here"""
+    """Formats the input kaggle data into an appropriate data
+    structure to work with. Each pixel entry is normalized to be 
+    between 0 and 1 (from 0 to 255) and each input image is stored 
+    in a list containing entries with shape (784,1). Note that this 
+    is NOT the same as (784,) and this input will break the code.
+    The image label is also put into a list and the two are then 
+    zipped together and returned."""
     inputs = [np.reshape(x, (784,1))/255 for x in data[:,1:]]
     outputs = [y for y in data[:,0]] 
     formatted_data = zip(outputs, inputs)
@@ -226,24 +232,52 @@ if __name__ == '__main__':
     training_data = pd.read_csv('../data/train.csv')
     test_data = pd.read_csv('../data/test.csv')
     
-
     
-    train_ar = np.array(training_data.iloc[:40000])
-    valid_ar = np.array(training_data.iloc[40000:42000])
+    train_ar = np.array(training_data.iloc[:20000])
+    valid_ar = np.array(training_data.iloc[20000:25000])
     test_ar  = np.array(test_data)
 
 
     train_list = format_data (train_ar)
     valid_list = format_data (valid_ar)
     
+   
     train_list = list (train_list)
     valid_list = list (valid_list)
     
-#    baseline = svm.SVC()
+    baseline = svm.SVC()
     
-#    input_svm = [image[0] for image in train_list]
-#    output_svm = [image[1] for image in train_list] 
-          
+    input_svm = [image[1] for image in train_list]
+    output_svm = [image[0] for image in train_list] 
+    
+    input_svm = list(map(np.ravel, input_svm))
+#    output_svm = list(map(np.ravel, output_svm))     
+
+    testing_in = [image[1] for image in valid_list]
+    testing_out = [image[0] for image in valid_list]
+    
+    testing_in = list(map(np.ravel, testing_in))
+#    testing_out = map(np.ravel, testing_out)
+    
+
+    print ("BEGIN SVM FIT")
+    
+    baseline.fit (input_svm, output_svm)
+    
+    print ("Fit complete")
+    
+    predictions = [int(a) for a in baseline.predict(testing_in)]
+    
+    print ("Predictions complete")
+    
+    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
+    
+    print ("Baseline SVM fit.")
+    print ("{} of {} values correct".format(correct, len(testing_out)))
+    sys.exit()
+    
+    
+    
 #    for i in range(0,784):
 #        num = input_svm[1][i]
 #        print (num, end='')
@@ -283,7 +317,7 @@ if __name__ == '__main__':
     
 #    sys.exit()
     net = Network([784, 30, 10])
-    net.SGD(train_list, 30, 100, 1.0, test_data = valid_list)
+    net.SGD(train_list, 30, 10, 3.0, test_data = valid_list)
     #print (train_ar.shape)
     #print (valid_ar.shape)
     #print (test_ar.shape)
