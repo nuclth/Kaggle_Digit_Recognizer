@@ -56,7 +56,7 @@ class Network(object):
         return a
 
     def SGD(self, train_data, epochs, mini_batch_size, eta,
-            test_data=None):
+            test_data=None, store_eval=None):
         """Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
         ``(x, y)`` representing the training inputs and the desired
@@ -66,12 +66,9 @@ class Network(object):
         epoch, and partial progress printed out.  This is useful for
         tracking progress, but slows things down substantially."""
         n = len(train_data)
-#        tr_d = self.format_data(train_data)
-#        tr_d = list(tr_d)
         
-#        print (train_data[0][0])
-#        print (train_data[0][1])
-#        sys.exit()
+        trained_b = self.biases
+        trained_w = self.weights
         
         if test_data: n_test = len(test_data)
             
@@ -85,8 +82,17 @@ class Network(object):
             if test_data:
                 print("Epoch {}: {} / {}".format(
                     j, self.evaluate(test_data), n_test))
+                store_eval.append(self.evaluate(test_data))
+                    
+                if j > 0 and store_eval[j+1] >= max(store_eval):
+                    trained_b = self.biases
+                    trained_w = self.weights
+                    print ("HIT")
+                        
             else:
                 print("Epoch {} complete".format(j))
+        
+        return (trained_b, trained_w)
 
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
@@ -221,6 +227,7 @@ def format_data(data):
     inputs = [np.reshape(x, (784,1))/255 for x in data[:,1:]]
     outputs = [y for y in data[:,0]] 
     formatted_data = zip(outputs, inputs)
+    formatted_data = list(formatted_data)
     return formatted_data
 
 
@@ -233,17 +240,13 @@ if __name__ == '__main__':
     test_data = pd.read_csv('../data/test.csv')
     
     
-    train_ar = np.array(training_data.iloc[:20000])
-    valid_ar = np.array(training_data.iloc[20000:25000])
+    train_ar = np.array(training_data.iloc[:40000])
+    valid_ar = np.array(training_data.iloc[40000:42000])
     test_ar  = np.array(test_data)
 
 
     train_list = format_data (train_ar)
     valid_list = format_data (valid_ar)
-    
-   
-    train_list = list (train_list)
-    valid_list = list (valid_list)
     
     baseline = svm.SVC()
     
@@ -275,49 +278,7 @@ if __name__ == '__main__':
     print ("Baseline SVM fit.")
     print ("{} of {} values correct".format(correct, len(testing_out)))
     sys.exit()
-    
-    
-    
-#    for i in range(0,784):
-#        num = input_svm[1][i]
-#        print (num, end='')
-#        digits = 1
-#        if num != 0:
-#            digits = int(math.log10(num))+1
-#        if digits == 1:
-#            print ("    ", end='')
-#        elif digits == 2:
-#            print ("   ", end='')
-#        elif digits == 3:
-#            print ("  ", end='')
-#        if i % 28 == 0 and i != 0:
-#            print ('\n')
-    
-#    sys.exit()
-    
-#    print (output_svm[0])
 
-#    print (len(input_svm))
-#    print (len(output_svm))
-
-#    print ("Performing SVM Fit")
-
-#    baseline.fit (input_svm, output_svm)
-    
-#    print ("Fit complete")
-    
-#    predictions = [int(a) for a in baseline.predict(testing_in)]
-    
-#    print ("Predictions complete")
-    
-#    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
-    
-#    print ("Baseline SVM fit.")
-#    print ("{} of {} values correct".format(correct, len(testing_out)))
-    
-#    sys.exit()
     net = Network([784, 30, 10])
     net.SGD(train_list, 30, 10, 3.0, test_data = valid_list)
-    #print (train_ar.shape)
-    #print (valid_ar.shape)
-    #print (test_ar.shape)
+
