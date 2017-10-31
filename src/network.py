@@ -117,9 +117,7 @@ class Network(object):
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         # feedforward
         activation = image
-#        print (image)
         activations = [activation] # list to store all the activations, layer by layer
-#        print (activation.shape)
         zs = [] # list to store all the z vectors, layer by layer
         for b, w in zip(self.biases, self.weights):
             z = np.dot(w, activation) + b
@@ -128,36 +126,20 @@ class Network(object):
             activations.append(activation)
         # backward pass
         delta = self.cost_derivative(activations[-1], value) * sigmoid_prime(zs[-1]) 
-#        print (delta.shape)
-#        sys.exit()
-#        print (delta)
-#        print (delta[0])
-#        print (delta[0][0])
-#        sys.exit()
         nabla_b[-1] = delta
         nabla_w[-1] = np.dot(delta, activations[-2].transpose())
-#        print (nabla_w[-1].shape)
         # Note that the variable l in the loop below is used a little
         # differently to the notation in Chapter 2 of the book.  Here,
         # l = 1 means the last layer of neurons, l = 2 is the
         # second-last layer, and so on.  It's a renumbering of the
         # scheme in the book, used here to take advantage of the fact
         # that Python can use negative indices in lists.
-#        print ("BEGIN L LOOP")
         for l in range(2, self.num_layers):
-#            print (l)
             z = zs[-l]
             sp = sigmoid_prime(z)
             delta = np.dot(self.weights[-l+1].transpose(), delta) * sp
-#            print (delta.shape)
             nabla_b[-l] = delta
             nabla_w[-l] = np.dot(delta, activations[-l-1].transpose())
-#        print ("END L loop")
-#        print (nabla_b[0].shape)
-#        print (nabla_w[0].shape)
-#        print (nabla_b[1].shape)
-#        print (nabla_w[1].shape)
-#        sys.exit()
         return (nabla_b, nabla_w)
 
     def evaluate(self, test_data):
@@ -172,7 +154,6 @@ class Network(object):
     def cost_derivative(self, output_activations, y):
         """Return the vector of partial derivatives \partial C_x /
         \partial a for the output activations."""
-#        print (output_activations)
         cost = np.array(output_activations)
         cost[y] = cost[y] - 1.0
         return cost
