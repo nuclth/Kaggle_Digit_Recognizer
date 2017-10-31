@@ -79,15 +79,12 @@ class Network(object):
                 for k in range(0, n, mini_batch_size)]
             for mini_batch in mini_batches:
                 self.update_mini_batch(mini_batch, eta)
+            trained_b = self.biases
+            trained_w = self.weights
             if test_data:
                 print("Epoch {}: {} / {}".format(
                     j, self.evaluate(test_data), n_test))
-                store_eval.append(self.evaluate(test_data))
-                    
-                if j > 0 and store_eval[j+1] >= max(store_eval):
-                    trained_b = self.biases
-                    trained_w = self.weights
-                    print ("HIT")
+                store_eval.append(self.evaluate(test_data)/len(test_data))
                         
             else:
                 print("Epoch {} complete".format(j))
@@ -185,17 +182,6 @@ class Network(object):
 def sigmoid(z):
     """The sigmoid function."""
     return (1.0/(1.0 + np.exp(-z)))
-#    sig = np.zeros(len(z))
-#    for a in range(0, len(z)):
-#        if z[a] > 700.:
-#            sig[a] = 1.
-#        elif z[a] < -700.:
-#            sig[a] = 0.
-#        else:
-#            sig[a] = (1.0/(1.0 + np.exp(-z[a])))
-#    sig = sig.reshape(len(sig), 1)
-#    return sig
-#     return (1.0/(1.0 + np.exp(-z)))
 
 
 def sigmoid_prime(z):
@@ -204,81 +190,15 @@ def sigmoid_prime(z):
 
 
 
-def svm_baseline():
-    pass
-#    training_data, validation_data, test_data = mnist_loader.load_data()
-    # train
-#    clf = svm.SVC()
-#    clf.fit(training_data[0], training_data[1])
-    # test
-#    predictions = [int(a) for a in clf.predict(test_data[0])]
-#    num_correct = sum(int(a == y) for a, y in zip(predictions, test_data[1]))
-#    print "Baseline classifier using an SVM."
-#    print "%s of %s values correct." % (num_correct, len(test_data[1]))
-
 def format_data(data):
     """Formats the input kaggle data into an appropriate data
     structure to work with. Each pixel entry is normalized to be 
     between 0 and 1 (from 0 to 255) and each input image is stored 
     in a list containing entries with shape (784,1). Note that this 
-    is NOT the same as (784,) and this input will break the code.
+    is NOT the same as (784,) as this input will break the code.
     The image label is also put into a list and the two are then 
     zipped together and returned."""
     inputs = [np.reshape(x, (784,1))/255 for x in data[:,1:]]
     outputs = [y for y in data[:,0]] 
     formatted_data = zip(outputs, inputs)
-    formatted_data = list(formatted_data)
     return formatted_data
-
-
-
-if __name__ == '__main__':
-    
-#    import math
-    
-    training_data = pd.read_csv('../data/train.csv')
-    test_data = pd.read_csv('../data/test.csv')
-    
-    
-    train_ar = np.array(training_data.iloc[:40000])
-    valid_ar = np.array(training_data.iloc[40000:42000])
-    test_ar  = np.array(test_data)
-
-
-    train_list = format_data (train_ar)
-    valid_list = format_data (valid_ar)
-    
-    baseline = svm.SVC()
-    
-    input_svm = [image[1] for image in train_list]
-    output_svm = [image[0] for image in train_list] 
-    
-    input_svm = list(map(np.ravel, input_svm))
-#    output_svm = list(map(np.ravel, output_svm))     
-
-    testing_in = [image[1] for image in valid_list]
-    testing_out = [image[0] for image in valid_list]
-    
-    testing_in = list(map(np.ravel, testing_in))
-#    testing_out = map(np.ravel, testing_out)
-    
-
-    print ("BEGIN SVM FIT")
-    
-    baseline.fit (input_svm, output_svm)
-    
-    print ("Fit complete")
-    
-    predictions = [int(a) for a in baseline.predict(testing_in)]
-    
-    print ("Predictions complete")
-    
-    correct = sum(int(a==y) for a, y in zip(predictions, testing_out))
-    
-    print ("Baseline SVM fit.")
-    print ("{} of {} values correct".format(correct, len(testing_out)))
-    sys.exit()
-
-    net = Network([784, 30, 10])
-    net.SGD(train_list, 30, 10, 3.0, test_data = valid_list)
-
