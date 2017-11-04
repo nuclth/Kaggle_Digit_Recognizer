@@ -98,7 +98,6 @@ class Network(object):
         is the learning rate."""
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
-        loop = 0
         for value, image in mini_batch:
             delta_nabla_b, delta_nabla_w = self.backprop(image, value)
             nabla_b = [nb+dnb for nb, dnb in zip(nabla_b, delta_nabla_b)]
@@ -170,16 +169,27 @@ def sigmoid_prime(z):
     return sigmoid(z)*(1-sigmoid(z))
 
 
-
 def format_data(data):
     """Formats the input kaggle data into an appropriate data
     structure to work with. Each pixel entry is normalized to be 
     between 0 and 1 (from 0 to 255) and each input image is stored 
     in a list containing entries with shape (784,1). Note that this 
-    is NOT the same as (784,) as this input will break the code.
-    The image label is also put into a list and the two are then 
-    zipped together and returned."""
+    is NOT the same as (784,) as this input will cause some numpy
+    routins to perform incorrectly. The image label is also put into 
+    a list and the two are then zipped together and returned."""
     inputs = [np.reshape(x, (784,1))/255 for x in data[:,1:]]
     outputs = [y for y in data[:,0]] 
     formatted_data = zip(outputs, inputs)
     return formatted_data
+
+
+def print_image (data, image):
+    """Function to output an image to console. The input variable data is the 
+    MNIST dataset in the format specified by the format_data function. The 
+    input variable image is the choice for which image in the set to output.
+    The index starts at zero so choosing the first image would have image = 0."""
+    row_length = 28
+    for j in range (0, row_length):
+        print ('\n')
+        for i in range (0, row_length):
+            print ("%3i" % data.iloc[image,1+j*row_length:29+j*row_length][i], end = ' ')
