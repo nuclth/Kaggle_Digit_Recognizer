@@ -3,20 +3,16 @@
 """
 Created on Wed Oct 18 16:31:45 2017
 
-@author: alex
+Some modifications by Alex Dyhdalo but the primary backbone and majority
+of this code comes from Michael Nielsen, see github.com/mnielsen.
 """
 
 ## import libraries
 # standard libraries
-import sys
 import random
-import gc
 
 # third party libraries
 import numpy as np
-import pandas as pd
-from sklearn.utils import shuffle
-from sklearn import svm
 
 """
 network.py
@@ -24,9 +20,7 @@ network.py
 
 A module to implement the stochastic gradient descent learning
 algorithm for a feedforward neural network.  Gradients are calculated
-using backpropagation.  Note that I have focused on making the code
-simple, easily readable, and easily modifiable.  It is not optimized,
-and omits many desirable features.
+using backpropagation.
 """
 
 
@@ -59,12 +53,14 @@ class Network(object):
             test_data=None, store_eval=None):
         """Train the neural network using mini-batch stochastic
         gradient descent.  The ``training_data`` is a list of tuples
-        ``(x, y)`` representing the training inputs and the desired
-        outputs.  The other non-optional parameters are
+        ``(label, image)`` representing the training labels and
+        pixel inputs repsectively. The other non-optional parameters are
         self-explanatory.  If ``test_data`` is provided then the
         network will be evaluated against the test data after each
         epoch, and partial progress printed out.  This is useful for
-        tracking progress, but slows things down substantially."""
+        tracking progress, but slows things down substantially. The
+        final output of this process are the trained weights
+        and biases."""
         n = len(train_data)
         
         trained_b = self.biases
@@ -94,8 +90,8 @@ class Network(object):
     def update_mini_batch(self, mini_batch, eta):
         """Update the network's weights and biases by applying
         gradient descent using backpropagation to a single mini batch.
-        The ``mini_batch`` is a list of tuples ``(x, y)``, and ``eta``
-        is the learning rate."""
+        The ``mini_batch`` is a list of tuples ``(value, image)``, and
+        ``eta`` is the learning rate."""
         nabla_b = [np.zeros(b.shape) for b in self.biases]
         nabla_w = [np.zeros(w.shape) for w in self.weights]
         for value, image in mini_batch:
